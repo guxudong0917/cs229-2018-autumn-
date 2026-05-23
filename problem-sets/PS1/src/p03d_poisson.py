@@ -2,7 +2,7 @@ import numpy as np
 import util
 
 from linear_model import LinearModel
-
+import matplotlib.pyplot as plt
 
 def main(lr, train_path, eval_path, pred_path):
     """Problem 3(d): Poisson regression with gradient ascent.
@@ -20,7 +20,21 @@ def main(lr, train_path, eval_path, pred_path):
 
     # *** START CODE HERE ***
     # Fit a Poisson Regression model
+    clf=PoissonRegression(step_size=lr,max_iter=3000)
+    clf.fit(x_train,y_train)
+
     # Run on the validation set, and use np.savetxt to save outputs to pred_path
+    x_eval, y_eval = util.load_dataset(eval_path, add_intercept=True)
+
+    pred=clf.predict(x_eval)
+    np.savetxt(pred_path,pred)
+
+    loss=np.mean((pred-y_eval)**2)
+    print(loss)
+
+    plt.plot(y_eval, 'go', label='label')
+    plt.plot(pred, 'rx', label='prediction')
+    plt.show()
     # *** END CODE HERE ***
 
 
@@ -41,6 +55,22 @@ class PoissonRegression(LinearModel):
             y: Training example labels. Shape (m,).
         """
         # *** START CODE HERE ***
+
+        #先初始化theta
+        n=x.shape[1]
+        m=y.shape[0]
+        self.theta=np.zeros(n)
+        
+        for i in range(self.max_iter):
+            h=np.exp(x@self.theta)#m
+
+            update=self.step_size*(x.T@(y-h))/m
+
+            if np.linalg.norm(update,ord=1)<self.eps:
+                print(f"更新值小于{self.eps},停止更新")
+                break
+
+            self.theta+=update
         # *** END CODE HERE ***
 
     def predict(self, x):
@@ -53,4 +83,6 @@ class PoissonRegression(LinearModel):
             Floating-point prediction for each input, shape (m,).
         """
         # *** START CODE HERE ***
+        h=np.exp(x@self.theta)
+        return h
         # *** END CODE HERE ***

@@ -46,9 +46,9 @@ if args.p_num == 0 or args.p_num == 3:
 
 # Problem 5
 if args.p_num == 0 or args.p_num == 5:
-    p05b(tau=5e-1,
-         train_path='../data/ds5_train.csv',
-         eval_path='../data/ds5_valid.csv')
+#     p05b(tau=5e-1,
+#          train_path='../data/ds5_train.csv',
+#          eval_path='../data/ds5_valid.csv')
 
     p05c(tau_values=[3e-2, 5e-2, 1e-1, 5e-1, 1e0, 1e1],
          train_path='../data/ds5_train.csv',
