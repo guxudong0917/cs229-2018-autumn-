@@ -46,7 +46,7 @@ def main(tau_values, train_path, valid_path, test_path, pred_path):
     result=pd.DataFrame({"tau":tau_values,
                          "mse":mse_list}).sort_values(by="mse")
     print(result)
-    best_tau=result.loc[1,"tau"]
+    best_tau=result.loc[0,"tau"]
     # Fit a LWR model with the best tau value
     x_test, y_test = util.load_dataset(test_path, add_intercept=True)
 
