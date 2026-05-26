@@ -37,7 +37,6 @@ def predict(state, kernel, x_i):
     """
     # *** START CODE HERE ***
 
-
     z=0
     for beta,x in zip(state["beta"],state["X"]):
         z+=beta*(kernel(x,x_i))

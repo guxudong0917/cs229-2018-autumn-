@@ -42,6 +42,8 @@ https://github.com/guxudong0917/cs229-2018-autumn-
 - `监督学习-线性模型.md`：线性回归、正规方程、局部加权线性回归、逻辑回归、牛顿法。
 - `监督学习-GLM与指数族.md`：指数族、GLM 三个假设、均值方差性质、逻辑回归和 Poisson 回归。
 - `监督学习-GLA生成式学习算法.md`：生成式学习算法、GDA、朴素贝叶斯。
+- `监督学习-SVM支持向量机和核方法.md`：SVM 的函数间隔、几何间隔、软/硬间隔、对偶形式、核函数、核矩阵与 Mercer 条件。
+- `监督学习-正则化泛化与交叉验证.md`：正则化的贝叶斯解释、MAP、L1/L2 正则化、泛化误差、Bias-Variance、Double Descent、交叉验证、ERM 与 VC Dimension。
 - `imgs/`：笔记配图资源。
 
 ## 当前完成进度
@@ -58,10 +60,16 @@ https://github.com/guxudong0917/cs229-2018-autumn-
   - GLM 广义线性模型。
   - GLA 生成式学习算法。
   - GDA 与朴素贝叶斯。
+  - SVM 支持向量机与核方法。
+  - 正则化、泛化与模型选择。
+  - 交叉验证、ERM 与 VC Dimension 等泛化理论基础。
 
 - Problem Set 1：
   - 已完成 PS1 主体实验。
   - 包括 Logistic Regression、GDA、Positive-Only Labels、Poisson Regression、Locally Weighted Linear Regression 等代码实验。
 
+- Problem Set 2：
+  - 已完成 PS2 主体实验与相关推导。
+  - 包括 Logistic Regression 训练稳定性、模型校准、正则化的贝叶斯解释、核函数构造、Kernelized Perceptron、Naive Bayes 垃圾短信分类与 SVM radius 选择等内容。
 
 

@@ -587,10 +587,9 @@ $\ell(\phi_{\cdot\mid 1})=\sum_{i:y^{(i)}=1}\sum_{j=1}^{n_i}\sum_{k=1}^K\mathbf{
 
 直观上，最大似然会把 $\phi_{k\mid 1}$ 估计成“正类文本中第 $k$ 个词出现的比例”：
 
-$\phi_{k\mid 1}=\frac{\sum_{i:y^{(i)}=1}\sum_{j=1}^{n_i}\mathbf{1}\{x_j^{(i)}=k\}}{\sum_{i:y^{(i)}=1}n_i}$。
+$\phi_{k\mid 1}=\frac{\sum_{i:y^{(i)}=1}\sum_{j=1}^{n_i}\mathbf{1}\{x_j^{(i)}=k\}}{\sum_{i:y^{(i)}=1}n_i}$。要标签为1的邮件中出现了多少次k，除以标签为1的邮件的总次数。
 
 同理：
-
 $\phi_{k\mid 0}=\frac{\sum_{i:y^{(i)}=0}\sum_{j=1}^{n_i}\mathbf{1}\{x_j^{(i)}=k\}}{\sum_{i:y^{(i)}=0}n_i}$。
 
 这就是文本分类里很常见的 Multinomial Naive Bayes：统计每个类别中各个词出现的频率。
@@ -635,7 +634,203 @@ $\phi_{k\mid 0}=\frac{\sum_{i:y^{(i)}=0}\sum_j\mathbf{1}\{x_j^{(i)}=k\}+1}{\sum_
 
 分母加 $K$ 是因为词表里一共有 $K$ 种可能的词。
 
-## 13. 和 GDA、逻辑回归的关系
+## 13. 代码任务：垃圾短信分类器
+
+这个任务使用 Multinomial Naive Bayes 完成 SMS spam classification。输入是一条短信文本，输出是 $y\in\{0,1\}$，其中 $y=1$ 表示 spam，$y=0$ 表示 not spam。
+
+整体流程是：
+
+```text
+短信文本 -> 分词和归一化 -> 构建词典 -> 转换成词频矩阵 -> 训练 Naive Bayes -> 用 log score 预测类别 -> 找出最能指示 spam 的词
+```
+
+### 13.1 构建字典
+
+第一步是把文本里的词变成可以被矩阵表示的特征。
+
+对训练集中的每条 message 做分词和小写化。然后统计每个词出现在多少条 message 中。只保留出现在至少 5 条 message 中的词，并为每个词分配一个整数编号。
+
+注意：这里统计的是“出现在多少条 message 中”，不是“总共出现多少次”。如果一个词在同一条短信里出现很多次，也只说明它出现在这一条 message 中。
+
+可以写成：
+$\mathrm{count}(w)=\sum_{i=1}^m\mathbf{1}\{w\in message^{(i)}\}$。
+
+如果 $\mathrm{count}(w)\ge 5$，则把它加入 dictionary，并分配编号：
+$dictionary[w]=k$。
+
+
+```python
+def get_words(message):
+    
+    return message.lower().split(" ")
+   
+def create_dictionary(messages):
+    
+    word_count={}
+    #统计词语在多少个句子中出现过
+    for message in messages:
+        words=set(get_words(message))
+        for word in words:
+            word_count[word]=word_count.get(word,0)+1
+
+    all_words=[]
+    for message in messages:
+        all_words+=get_words(message)
+        
+    i=0
+    word_dict={}
+    for word in set(all_words):
+        if word_count[word]>=5:
+            word_dict[word]=i
+            i+=1
+    return word_dict
+```
+
+### 13.2 文本转换成词频矩阵
+
+设词典大小为 $K$，训练集有 $m$ 条短信。转换后得到矩阵 $X\in\mathbb R^{m\times K}$。
+
+其中 $X_{ik}$ 表示第 $i$ 条短信中，第 $k$ 个词出现的次数。
+
+每一行是一条短信，每一列是词典中的一个词。如果某个词不在 dictionary 中，就忽略。
+
+这就是 bag-of-words 表示。它丢掉了词的顺序，只保留每个词出现了多少次。
+
+代码位置：
+
+```python
+def transform_text(messages, word_dictionary):
+
+    m=len(messages)
+    size=len(word_dictionary)
+    result=np.zeros((m,size))
+
+    for i,message in enumerate(messages):
+        word_list=get_words(message)
+        for word in word_list:
+            if word_dictionary.get(word)!=None:
+                result[i][word_dictionary[word]]+=1
+    return result
+
+    # *** END CODE HERE ***
+```
+
+### 13.3 训练 Multinomial Naive Bayes
+
+训练时要估计类别先验和词条件概率。
+
+类别先验为：
+
+$\phi_y=p(y=1)=\frac{\sum_i\mathbf{1}\{y^{(i)}=1\}}{m}$。
+
+词条件概率为：
+
+$\phi_{k\mid 1}=p(word=k\mid y=1)$。
+
+使用 Laplace smoothing：
+
+$\phi_{k\mid 1}=\frac{\sum_{i:y^{(i)}=1}X_{ik}+1}{\sum_{i:y^{(i)}=1}\sum_{j=1}^K X_{ij}+K}$。
+
+同理：
+
+$\phi_{k\mid 0}=\frac{\sum_{i:y^{(i)}=0}X_{ik}+1}{\sum_{i:y^{(i)}=0}\sum_{j=1}^K X_{ij}+K}$。
+
+分子是某个词在该类别中出现的次数加 1。分母是该类别中所有词出现次数加 $K$。这里的 $K$ 是词典大小，因为 Laplace smoothing 给每个词都加了一个虚拟计数。
+
+
+```python
+def fit_naive_bayes_model(matrix, labels):
+
+    k=matrix.shape[1]
+
+    state={}
+
+    spam = matrix[labels==1]
+    ham=matrix[labels==0]
+
+    state["y=1"]=np.mean(labels)
+    state["y=0"]=1-state["y=1"]
+
+    state["phi_k_y1"]=(spam.sum(axis=0)+1)/(spam.sum()+k)
+    state["phi_k_y0"]=(ham.sum(axis=0)+1)/(ham.sum()+k)
+    
+    return state
+```
+
+### 13.4 预测：为什么要用 log score
+
+对一条短信，其词频向量为 $x$。
+
+朴素贝叶斯比较：
+
+$p(y=1\mid x)\propto p(y=1)p(x\mid y=1)$。
+
+在 multinomial event model 下：
+
+$p(y=1)p(x\mid y=1)=\phi_y\prod_{k=1}^K\phi_{k\mid 1}^{x_k}$。
+
+但直接计算这个连乘会有 underflow 问题。因为每个 $\phi_{k\mid 1}$ 都小于 1，很多小概率相乘会得到极小值，计算机可能直接把它当成 0。
+
+所以预测时改用 log score：
+
+$score_1=\log\phi_y+\sum_{k=1}^K x_k\log\phi_{k\mid 1}$。
+
+$score_0=\log(1-\phi_y)+\sum_{k=1}^K x_k\log\phi_{k\mid 0}$。
+
+如果 $score_1>score_0$，则预测 $\hat y=1$；否则预测 $\hat y=0$。
+
+这里要注意：问题来自“很多概率连乘”，不是阶乘。
+
+
+
+```python
+def predict_from_naive_bayes_model(model, matrix):
+    pred_y1=np.log(model["y=1"])+matrix@np.log(model["phi_k_y1"])
+    pred_y0=np.log(model["y=0"])+matrix@np.log(model["phi_k_y0"])
+
+    return (pred_y1>pred_y0).astype(int)
+    
+```
+
+### 13.5 找出最有指示性的五个词
+
+题目使用 log ratio 衡量一个词对 spam 类别的指示性：
+
+$indicator(k)=\log\frac{p(word=k\mid y=1)}{p(word=k\mid y=0)}$。
+
+也就是：
+
+$indicator(k)=\log\phi_{k\mid 1}-\log\phi_{k\mid 0}$。
+
+这个值越大，说明词 $k$ 在 spam 中相对更常见，而在 not spam 中相对更少见，因此它越能指示 spam 类别。
+
+对所有词计算 $indicator(k)$，排序后取最大的 5 个词即可。
+这里构建了一个反向字典
+
+
+```python
+def get_top_five_naive_bayes_words(model, dictionary):
+    
+    result=np.log(model["phi_k_y1"])-np.log(model["phi_k_y0"])
+
+    result_idx=[idx for idx,val in sorted(enumerate(result),key=lambda x:x[1],reverse=True)][:5]
+
+  
+    idx_to_word={idx:word for word,idx in dictionary.items()}
+    return [idx_to_word[idx] for idx in result_idx]
+```
+
+### 13.6 代码和公式的对应关系
+
+- `create_dictionary` 对应词表 $V$。
+- `transform_text` 对应构造词频矩阵 $X$。
+- `fit_naive_bayes_model` 对应估计 $\phi_y,\phi_{k\mid 1},\phi_{k\mid 0}$。
+- `predict_from_naive_bayes_model` 对应比较 $score_1$ 和 $score_0$。
+- `get_top_five_naive_bayes_words` 对应计算 $\log\frac{\phi_{k\mid 1}}{\phi_{k\mid 0}}$。
+
+这段代码的重点不是复杂模型，而是把文本一步步转换成可以套用朴素贝叶斯公式的矩阵表示。
+
+## 14. 和 GDA、逻辑回归的关系
 
 GDA 和朴素贝叶斯都是生成式模型，都学习 $p(x\mid y)$ 和 $p(y)$，再通过贝叶斯公式得到 $p(y\mid x)$。
 
