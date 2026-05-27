@@ -44,6 +44,8 @@ https://github.com/guxudong0917/cs229-2018-autumn-
 - `监督学习-GLA生成式学习算法.md`：生成式学习算法、GDA、朴素贝叶斯。
 - `监督学习-SVM支持向量机和核方法.md`：SVM 的函数间隔、几何间隔、软/硬间隔、对偶形式、核函数、核矩阵与 Mercer 条件。
 - `监督学习-正则化泛化与交叉验证.md`：正则化的贝叶斯解释、MAP、L1/L2 正则化、泛化误差、Bias-Variance、Double Descent、交叉验证、ERM 与 VC Dimension。
+- `无监督学习-KMeans聚类.md`：K-means 的目标函数、算法步骤、收敛性证明、与 EM/GMM 的关系，以及 PS3 图片压缩任务。
+- `无监督学习-EM算法与GMM.md`：GMM 的基本思想、EM 下界推导、E-step/M-step、半监督 EM 与 GMM 参数更新。
 - `imgs/`：笔记配图资源。
 
 ## 当前完成进度
@@ -64,6 +66,13 @@ https://github.com/guxudong0917/cs229-2018-autumn-
   - 正则化、泛化与模型选择。
   - 交叉验证、ERM 与 VC Dimension 等泛化理论基础。
 
+- 无监督学习部分：
+  - K-means 聚类。
+  - K-means 图片压缩实验。
+  - EM 算法。
+  - GMM 高斯混合模型。
+  - 半监督 EM 与 GMM 参数更新推导。
+
 - Problem Set 1：
   - 已完成 PS1 主体实验。
   - 包括 Logistic Regression、GDA、Positive-Only Labels、Poisson Regression、Locally Weighted Linear Regression 等代码实验。
@@ -72,4 +81,7 @@ https://github.com/guxudong0917/cs229-2018-autumn-
   - 已完成 PS2 主体实验与相关推导。
   - 包括 Logistic Regression 训练稳定性、模型校准、正则化的贝叶斯解释、核函数构造、Kernelized Perceptron、Naive Bayes 垃圾短信分类与 SVM radius 选择等内容。
 
+- Problem Set 3：
+  - 已完成 PS3 中 K-means 图片压缩与 EM/GMM 相关部分。
+  - 整理了 K-means 聚类、EM 算法、GMM 以及半监督 EM 的核心推导与实验理解。
 
